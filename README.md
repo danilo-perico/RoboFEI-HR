@@ -1,7 +1,7 @@
-RoboFEI-HT
+RoboFEI-HR
 ==========
 
-Humanoid Racer team from University Center of FEI (Brazil).
+Humanoid Racing team from University Center of FEI (Brazil).
 
 Repository of software development to the robots for the race.
 
