@@ -33,11 +33,16 @@
 
 #include <signal.h>
 
+#include "minIni.h"
+
 #include <iterator>
 #include <fstream>
 #include <vector>
 
+#define HEAD_TILT 20
+#define HEAD_PAN 19
 
+#define INI_FILE_PATH       "Control/Data/config.ini"
 
 #define P_GOAL_POSITION_L	30
 #define P_GOAL_POSITION_H	31
@@ -140,7 +145,21 @@ signal(SIGINT, siginthandler);
 
     using_shared_memory();
 
-/*
+	minIni* ini;
+	ini = new minIni(INI_FILE_PATH);
+
+
+	if((pos_servo2=ini->getd("Offset","ID_19",-1024))==-1024){
+		cout<<"Erro na leitura do conf.ini";
+		return(0);
+	}
+
+	if((pos_servo1=ini->getd("Offset","ID_20",-1024))==-1024){
+		cout<<"Erro na leitura do conf.ini";
+		return(0);
+	}
+
+
 //*********************************************************
 //-------------para entrada de argumentos-----------------------------------
  namespace po=boost::program_options;
@@ -175,7 +194,7 @@ if (variables.count("help"))
 if (variables.count("vb")) 	cout<<"Chamou o video da bola\n";
 if (variables.count("vg"))	cout<<"Chamou o video do gol\n";
 if (variables.count("vl"))	cout<<"Chamou o video e o histograma da localização\n";
-*/
+
 
 //--------------------------------------------------------------------------
 //*************************************************
@@ -204,7 +223,7 @@ bool servoComunica = false;
 		{
 			servoComunica = true;
 			printf( "Succeed to open Servo%d!\n", deviceIndex );
-    			if(dxl_read_byte( 1, 3 ) == 1)
+    			if(dxl_read_byte( 19, 3 ) == 19)
 			{
        			 	printf("Servo%d okay - Connected and communicated!\n", deviceIndex);
 			 	break;
@@ -238,11 +257,11 @@ bool servoComunica = false;
 
    cont_BallSearch = 0;
 
-	BufferBallServo1 = dxl_read_word( 1, P_PRESENT_POSITION_L); 
+	BufferBallServo1 = dxl_read_word( HEAD_TILT, P_PRESENT_POSITION_L); 
 	BufferBallServo2 = dxl_read_word( 2, P_PRESENT_POSITION_L); 
-	BufferGoalServo1 = dxl_read_word( 1, P_PRESENT_POSITION_L); 
+	BufferGoalServo1 = dxl_read_word( HEAD_TILT, P_PRESENT_POSITION_L); 
 	BufferGoalServo2 = dxl_read_word( 2, P_PRESENT_POSITION_L); 
-        dxl_write_word(1, 34, 512); // Usando apenas 50% do torque
+        dxl_write_word(HEAD_TILT, 34, 512); // Usando apenas 50% do torque
         dxl_write_word(2, 34, 512); // Usando apenas 50% do torque
 
 cvInitFont(&font,CV_FONT_HERSHEY_SIMPLEX|CV_FONT_ITALIC, hScale,vScale,0,lineWidth);
@@ -270,13 +289,13 @@ cvSetCaptureProperty( captura, CV_CAP_PROP_FRAME_WIDTH, RESOLUCAO_X); //1280   1
 cvSetCaptureProperty( captura, CV_CAP_PROP_FRAME_HEIGHT, RESOLUCAO_Y ); //720   1080
 
 CvSize tamanho = cvSize(cvGetCaptureProperty(captura, CV_CAP_PROP_FRAME_WIDTH),cvGetCaptureProperty(captura, CV_CAP_PROP_FRAME_HEIGHT));
-/*
+
 	//Cria a janela do video da bola
 	if (variables.count("vb")) cvNamedWindow( "Imagem", CV_WINDOW_AUTOSIZE );
 
 	// Cria uma janela onde as imagens capturadas serão apresentadas
 	if (variables.count("vg")) cvNamedWindow( "Imagem", CV_WINDOW_AUTOSIZE );
-*/
+
 
         //CvScalar minG = cvScalar(20, 84, 130, 0);
         //CvScalar maxG = cvScalar(270, 256, 255, 0);
@@ -301,7 +320,7 @@ CvSize tamanho = cvSize(cvGetCaptureProperty(captura, CV_CAP_PROP_FRAME_WIDTH),c
 	if (variables.count("sh")) DECISION_ACTION_VISION = 3; // Salva o Histograma.			   //
 //***********************************************************************************
 */
-DECISION_ACTION_VISION==1;
+DECISION_ACTION_VISION=1;
     while( 1 )
  	{
 
@@ -359,9 +378,9 @@ DECISION_ACTION_VISION==1;
 	{
 		TransitionGoal = 1;
         	dxl_write_word(2, MOVING_SPEED, 700);
-        	dxl_write_word(1, MOVING_SPEED, 700);
+        	dxl_write_word(HEAD_TILT, MOVING_SPEED, 700);
         	dxl_write_word(2, P_GOAL_POSITION_L, BufferBallServo2);
-        	dxl_write_word(1, P_GOAL_POSITION_L, BufferBallServo1);
+        	dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, BufferBallServo1);
 		sleep(1);
 	}	
 	TransitionBall = 0;
@@ -502,7 +521,7 @@ DECISION_ACTION_VISION==1;
             VISION_SEARCH_BALL = 0;
             if(inicio==0)// Faz o robô parar a cabeça no instante que achou a bola que estava perdida
             {            // Sem esse comando o código não funciona porque ele não para a cabeça
-                dxl_write_word(1, P_GOAL_POSITION_L, dxl_read_word( 1, P_PRESENT_POSITION_L));
+                dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, dxl_read_word( 1, P_PRESENT_POSITION_L));
                 dxl_write_word(2, P_GOAL_POSITION_L, dxl_read_word( 2, P_PRESENT_POSITION_L));
             }
 
@@ -555,7 +574,7 @@ DECISION_ACTION_VISION==1;
 	VISION_MOTOR2_ANGLE = dxl_read_word( 2, P_PRESENT_POSITION_L);
 	std::cout <<"Servo2 Bola = "<< VISION_MOTOR2_ANGLE << std::endl;
 
-	VISION_MOTOR1_ANGLE = dxl_read_word( 1, P_PRESENT_POSITION_L);
+	VISION_MOTOR1_ANGLE = dxl_read_word( HEAD_TILT, P_PRESENT_POSITION_L);
 	std::cout <<"Servo1 Bola= "<<VISION_MOTOR1_ANGLE << std::endl;
 
 	BufferBallServo1 = VISION_MOTOR1_ANGLE; //Guarda a posição do servo1
@@ -598,21 +617,24 @@ DECISION_ACTION_VISION==1;
                 getchar();
 //                break;
         }
+        
+
+        
 	//pthread_mutex_unlock( &mutex3 );
 	//cvNamedWindow( "Saida Cinza", CV_WINDOW_AUTOSIZE );
 	//cvNamedWindow( "Original com linhas de Hough", CV_WINDOW_AUTOSIZE );
 
-	if(TransitionGoal)
-	{
-		TransitionBall = 1;
-        	dxl_write_word(2, MOVING_SPEED, 800);
-        	dxl_write_word(1, MOVING_SPEED, 800);
-        	dxl_write_word(2, P_GOAL_POSITION_L, BufferGoalServo2);
-        	dxl_write_word(1, P_GOAL_POSITION_L, BufferGoalServo1);
-		sleep(1);
-	}	
-	TransitionBall = 1;
-	TransitionGoal = 0;
+	    if(TransitionGoal)
+	    {
+		    TransitionBall = 1;
+        	dxl_write_word(HEAD_PAN, MOVING_SPEED, 800);
+        	dxl_write_word(HEAD_TILT, MOVING_SPEED, 800);
+        	dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, BufferGoalServo2);
+        	dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, BufferGoalServo1);
+		    sleep(1);
+	    }	
+	    TransitionBall = 1;
+	    TransitionGoal = 0;
 //************************************************************************************************
         IplImage* Gray  = cvCreateImage(tamanho, IPL_DEPTH_8U, 1);
         cvCvtColor(GoalFrame, Gray, CV_BGR2GRAY);
@@ -620,13 +642,13 @@ DECISION_ACTION_VISION==1;
 
         if (brightness < 20)
         {
-	cout << "Esta escuro!! "<<endl;
-	//VISION_STATE = 1;
+	        cout << "Esta escuro!! "<<endl;
+	        //VISION_STATE = 1;
         }
         else
         {
-        cout << "Esta Claro!! "<<endl;
-	//VISION_STATE = 0;
+            cout << "Esta Claro!! "<<endl;
+	        //VISION_STATE = 0;
         }
 //************************************************************************************************
         CvSize tamanhoG = cvSize(cvGetCaptureProperty(captura, CV_CAP_PROP_FRAME_WIDTH),cvGetCaptureProperty(captura, CV_CAP_PROP_FRAME_HEIGHT));
@@ -644,14 +666,14 @@ DECISION_ACTION_VISION==1;
         //CvMemStorage* memoriaG = cvCreateMemStorage(0);
 
 
-    Mat img (segmentadaG);
-    cv::Point Coord;
-    cv::Moments mm = cv::moments(img,false);
-    double moment10 = mm.m10;
-    double moment01 = mm.m01;
-    double moment00 = mm.m00;
-    Coord.x = int(moment10 / moment00);
-    Coord.y = int(moment01 / moment00);
+        Mat img (segmentadaG);
+        cv::Point Coord;
+        cv::Moments mm = cv::moments(img,false);
+        double moment10 = mm.m10;
+        double moment01 = mm.m01;
+        double moment00 = mm.m00;
+        Coord.x = int(moment10 / moment00);
+        Coord.y = int(moment01 / moment00);
 
 
     //cvCircle( Quadro, Coord, 10, CV_RGB(0,255,0), -1, 8, 0 );
@@ -666,11 +688,11 @@ DECISION_ACTION_VISION==1;
 	
         if ((Coord.x != 0) && (Coord.y != 0))
         {
-        VISION_DIST_GOAL = 1;
+            VISION_DIST_GOAL = 1;
         }
         else
         {
-        VISION_DIST_GOAL = 0;
+            VISION_DIST_GOAL = 0;
         }
 
 		cvCircle(GoalFrame , Coord, 10, CV_RGB(0,255,0), -1, 8, 0 );
@@ -723,7 +745,7 @@ DECISION_ACTION_VISION==1;
         if(VISION_DIST_GOAL == 0) //
         {
 
-                GoalSearch(inicio);//Procura a bola pelo campo
+                GoalSearch(inicio);//Procura pelo campo
                 saida = 0;
 
             inicio = 0;
@@ -733,48 +755,49 @@ DECISION_ACTION_VISION==1;
             //VISION_DIST_GOAL = 1;
             if (inicio==0)// Faz o robô parar a cabeça no instante que achou a bola que estava perdida
             {            // Sem esse comando o código não funciona porque ele não para a cabeça
-                dxl_write_word(1, P_GOAL_POSITION_L, dxl_read_word( 1, P_PRESENT_POSITION_L));
-                dxl_write_word(2, P_GOAL_POSITION_L, dxl_read_word( 2, P_PRESENT_POSITION_L));
+                dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, dxl_read_word( HEAD_TILT, P_PRESENT_POSITION_L));
+                dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L));
             }
 
             inicio =1;
 
             if (HeadFollow(Coord.x, Coord.y, &head_move1, &head_move2) == 1)
-	    {// Move a cabeça para seguir a bola
+	        {// Move a cabeça para seguir a bola
                saida++;
             }
 
-	VISION_MOTOR2_ANGLE = dxl_read_word( 2, P_PRESENT_POSITION_L);
-	std::cout <<"Servo2 Gol = "<< VISION_MOTOR2_ANGLE << std::endl;
+	        VISION_MOTOR2_ANGLE = dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L);
+	        std::cout <<"Servo2 Gol = "<< VISION_MOTOR2_ANGLE << std::endl;
 
-	VISION_MOTOR1_ANGLE = dxl_read_word( 1, P_PRESENT_POSITION_L);
-	std::cout <<"Servo1 Gol = "<<VISION_MOTOR1_ANGLE << std::endl;
+	        VISION_MOTOR1_ANGLE = dxl_read_word( HEAD_TILT, P_PRESENT_POSITION_L);
+	        std::cout <<"Servo1 Gol = "<<VISION_MOTOR1_ANGLE << std::endl;
 
-	BufferGoalServo1 = VISION_MOTOR1_ANGLE; //Guarda a posição do servo1
-	BufferGoalServo2 = VISION_MOTOR2_ANGLE; //Guarda a posição do servo2
+	        BufferGoalServo1 = VISION_MOTOR1_ANGLE; //Guarda a posição do servo1
+	        BufferGoalServo2 = VISION_MOTOR2_ANGLE; //Guarda a posição do servo2
 
         }
-     if( (cvWaitKey(10) & 255) == 27)
+        if( (cvWaitKey(10) & 255) == 27)
         {
-		break;
+        	//cvReleaseMemStorage(&memoriaG);
+            //cvReleaseImage(&CannyG);
+            cvReleaseImage(&QuadroHsvG);
+            cvReleaseImage(&segmentadaG);
+		    break;
 		}
 	//cvShowImage( "Linhas Detectadas", CannyG);
 	//cvShowImage( "Saida Cinza", segmentada);
 	//pthread_mutex_lock( &mutex3 );
-/*	
-	if (variables.count("vg"))
-	{
-		cvShowImage( "Imagem", GoalFrame );
-		cvShowImage( "Linhas Detectadas", CannyG);
-	//cvShowImage( "Saida Cinza", segmentada);
-	}
-*/	
-	cvShowImage( "Imagem", GoalFrame );
 
-	//cvReleaseMemStorage(&memoriaG);
-    //cvReleaseImage(&CannyG);
-    cvReleaseImage(&QuadroHsvG);
-    cvReleaseImage(&segmentadaG);
+        if (variables.count("vg"))
+	    {
+		    cvShowImage( "Imagem", GoalFrame );
+		    //cvShowImage( "Linhas Detectadas", CannyG);
+	    //cvShowImage( "Saida Cinza", segmentada);
+	    }
+	
+	//cvShowImage( "Imagem", GoalFrame );
+
+
 	//-----------------------------------------------------------------------------------
 	}// endif DECISION_ACTION_VISION==1
 
@@ -1077,8 +1100,8 @@ int HeadFollow(float posx, float posy, bool *head_move1, bool *head_move2)
 	int RightLimit = 194;
 // Posição inicial da cabeça {304, 594} //01 , 02, cabeça
 
-    dxl_write_word(1, MOVING_SPEED, 300);//300
-    dxl_write_word(2, MOVING_SPEED, 300);//300
+    dxl_write_word(HEAD_TILT, MOVING_SPEED, 300);//300
+    dxl_write_word(HEAD_PAN, MOVING_SPEED, 300);//300
 
     //int key = kbhit();
     //if (key != 0)
@@ -1094,7 +1117,7 @@ int HeadFollow(float posx, float posy, bool *head_move1, bool *head_move2)
     //------ Segue a bola para a esquerda do video -----------------------------------------
     if(posx<(RESOLUCAO_X/2)*(1-CENTERBALL) && *head_move2==false && posx > LeftLimit)
     {
-        dxl_write_word(2, P_GOAL_POSITION_L, dxl_read_word( 2, P_PRESENT_POSITION_L)+( ((RESOLUCAO_X/2)-posx) * AJUSTE));
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L)+( ((RESOLUCAO_X/2)-posx) * AJUSTE));
 
         //head_move = true;
     }
@@ -1102,7 +1125,7 @@ int HeadFollow(float posx, float posy, bool *head_move1, bool *head_move2)
     //------ Segue a bola para a direita do video -----------------------------------------
     if(posx>(RESOLUCAO_X/2)*(CENTERBALL+1) && *head_move2==false && posx < RightLimit)
     {
-        dxl_write_word(2, P_GOAL_POSITION_L, dxl_read_word( 2, P_PRESENT_POSITION_L)-( (posx-(RESOLUCAO_X/2)) * AJUSTE));
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L)-( (posx-(RESOLUCAO_X/2)) * AJUSTE));
 
         //dxl_write_word(2, P_GOAL_POSITION_L, dxl_read_word( 2, P_PRESENT_POSITION_L)-(((RESOLUCAO_X/2)-posx) * 0.30) );
         //head_move = true;
@@ -1111,12 +1134,12 @@ int HeadFollow(float posx, float posy, bool *head_move1, bool *head_move2)
     // Para a cabeça se chegou na posição desejada ----------------------------------------
     if(posx>=(RESOLUCAO_X/2)*(1-CENTERBALL) && posx<=(RESOLUCAO_X/2)*(CENTERBALL+1) && posx < RightLimit && posx > LeftLimit)
 	{
-        dxl_write_word(2, P_GOAL_POSITION_L, dxl_read_word( 2, P_PRESENT_POSITION_L));
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L));
         pan = 1;
 
     }
 
-    if(dxl_read_byte( 2, P_MOVING ))
+    if(dxl_read_byte( HEAD_PAN, P_MOVING ))
         *head_move2 = true;  // verifica se a cabeça está em movimento
     else
         *head_move2 = false; // verifica se a cabeça está em movimento
@@ -1303,8 +1326,8 @@ void GoalSearch(bool inicio)
     // Posição inicial da cabeça {304, 594} //01 , 02, cabeça
 static unsigned int varredura=0;
 
-        dxl_write_word(2, MOVING_SPEED, 150);//Seta as velocidades da cabeça
-        dxl_write_word(1, MOVING_SPEED, 400);
+        dxl_write_word(HEAD_PAN, MOVING_SPEED, 150);//Seta as velocidades da cabeça
+        dxl_write_word(HEAD_TILT, MOVING_SPEED, 400);
 
     if(inicio)
         varredura--; // continua a varredura de onde parou
@@ -1312,7 +1335,7 @@ static unsigned int varredura=0;
     if(varredura>9||varredura<1)
         varredura=0;
 
-    if(dxl_read_byte( 2, P_MOVING )==0)
+    if(dxl_read_byte( HEAD_PAN, P_MOVING )==0)
 	{
      varredura++;
      //cont_BallSearch++;
@@ -1322,58 +1345,58 @@ int LookDown = 180;
 int LeftLimit = 206;
 int RightLimit = 194;
 
-    if(dxl_read_byte( 2, P_MOVING )==0 && varredura==8)
+    if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==8)
     {
-        dxl_write_word(2, P_GOAL_POSITION_L, pos_servo2+LeftLimit);
-        dxl_write_word(1, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2+LeftLimit);
+        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
-    if(dxl_read_byte( 2, P_MOVING )==0 && varredura==7)
+    if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==7)
     {
-        dxl_write_word(2, P_GOAL_POSITION_L, pos_servo2-RightLimit);
-        dxl_write_word(1, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2-RightLimit);
+        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 	
 
-    if(dxl_read_byte( 2, P_MOVING )==0 && varredura==6)
+    if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==6)
     {
-        dxl_write_word(2, P_GOAL_POSITION_L, pos_servo2-RightLimit);
-        dxl_write_word(1, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2-RightLimit);
+        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
 
-    if(dxl_read_byte( 2, P_MOVING )==0 && varredura==5)
+    if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==5)
     {
-        dxl_write_word(2, P_GOAL_POSITION_L, pos_servo2+LeftLimit);
-        dxl_write_word(1, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2+LeftLimit);
+        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
 
-    if(dxl_read_byte( 2, P_MOVING )==0 && varredura==4)
+    if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==4)
     {
-        dxl_write_word(2, P_GOAL_POSITION_L, pos_servo2+LeftLimit);
-        dxl_write_word(1, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2+LeftLimit);
+        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
 
-    if(dxl_read_byte( 2, P_MOVING )==0 && varredura==3)
+    if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==3)
     {
-        dxl_write_word(2, P_GOAL_POSITION_L, pos_servo2-RightLimit);
-        dxl_write_word(1, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2-RightLimit);
+        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
-    if(dxl_read_byte( 1, P_MOVING )==0 && varredura==2)
+    if(dxl_read_byte( HEAD_TILT, P_MOVING )==0 && varredura==2)
     {
-        dxl_write_word(2, P_GOAL_POSITION_L, pos_servo2-RightLimit);
-        dxl_write_word(1, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2-RightLimit);
+        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
-    if(dxl_read_byte( 1, P_MOVING )==0 && varredura==1)
+    if(dxl_read_byte( HEAD_TILT, P_MOVING )==0 && varredura==1)
     {
-        dxl_write_word(2, MOVING_SPEED, 700);
-        dxl_write_word(1, MOVING_SPEED, 700);
-        dxl_write_word(2, P_GOAL_POSITION_L, pos_servo2-RightLimit);
-        dxl_write_word(1, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        dxl_write_word(HEAD_PAN, MOVING_SPEED, 700);
+        dxl_write_word(HEAD_TILT, MOVING_SPEED, 700);
+        dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2-RightLimit);
+        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
       
     }
 
