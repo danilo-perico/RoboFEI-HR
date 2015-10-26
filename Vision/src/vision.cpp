@@ -322,7 +322,7 @@ CvSize tamanho = cvSize(cvGetCaptureProperty(captura, CV_CAP_PROP_FRAME_WIDTH),c
 */
             //Posiciona a cabeca na posicao correta de achar a linha
         	dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2);
-        	dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1+210);
+        	dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1+190);
 
             //sleep(5);
 

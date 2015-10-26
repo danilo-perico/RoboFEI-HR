@@ -185,10 +185,15 @@ class Ordinary(TreatingRawData):
     def decision(self):
             self.set_vision_line() #set vision to find ball
 
-            self.set_walk_forward()
-            if self.delta_position_pan() >= 4 or self.delta_position_pan() <= -4:
-				self.set_angle_turn(self.delta_position_pan()*0.15)
-				print "   Turn ", self.delta_position_pan()*0.15
+          
+            if self.delta_position_pan() >= 49:
+                self.set_turn_right()
+            elif self.delta_position_pan() <= -49:
+                self.set_turn_left()
+            else:
+                self.set_walk_forward()
+                self.set_angle_turn(self.delta_position_pan()*0.15)
+                print "   Turn ", self.delta_position_pan()*0.15
 
 robot = Ordinary()
 
