@@ -62,8 +62,8 @@ using namespace std;
 //#define RESOLUCAO_X 1280 //1280   1920
 //#define RESOLUCAO_Y 720  //720   1080
 
-#define RESOLUCAO_X 640 //1280   1920
-#define RESOLUCAO_Y 480  //720   1080
+#define RESOLUCAO_X 320 //1280   1920 640
+#define RESOLUCAO_Y 240  //720   1080 480
 
 #define CENTERBALL 0.05 // Porcentagem de quanto centraliza a bola no quadro
 #define AJUSTE 0.285 // para resolução de 640x480
@@ -320,6 +320,12 @@ CvSize tamanho = cvSize(cvGetCaptureProperty(captura, CV_CAP_PROP_FRAME_WIDTH),c
 	if (variables.count("sh")) DECISION_ACTION_VISION = 3; // Salva o Histograma.			   //
 //***********************************************************************************
 */
+            //Posiciona a cabeca na posicao correta de achar a linha
+        	dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2);
+        	dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1+220);
+
+            //sleep(5);
+
 DECISION_ACTION_VISION=1;
     while( 1 )
  	{
@@ -605,8 +611,8 @@ DECISION_ACTION_VISION=1;
 		else
 		{
 */
-       			CvScalar minG = cvScalar(0, 0 , 0 , 0);//24 160 //160
-        		CvScalar maxG = cvScalar(179, 255, 57, 10);//47 //250
+       			CvScalar minG = cvScalar(92, 0 , 30 , 0);//24 160 //160
+        		CvScalar maxG = cvScalar(255, 141, 128, 10);//47 //250
 		//}
 
             IplImage* GoalFrame = cvQueryFrame( captura );
@@ -624,17 +630,17 @@ DECISION_ACTION_VISION=1;
 	//cvNamedWindow( "Saida Cinza", CV_WINDOW_AUTOSIZE );
 	//cvNamedWindow( "Original com linhas de Hough", CV_WINDOW_AUTOSIZE );
 
-	    if(TransitionGoal)
-	    {
-		    TransitionBall = 1;
-        	dxl_write_word(HEAD_PAN, MOVING_SPEED, 800);
-        	dxl_write_word(HEAD_TILT, MOVING_SPEED, 800);
-        	dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, BufferGoalServo2);
-        	dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, BufferGoalServo1);
-		    sleep(1);
-	    }	
-	    TransitionBall = 1;
-	    TransitionGoal = 0;
+//	    if(TransitionGoal)
+//	    {
+//		    TransitionBall = 1;
+//        	dxl_write_word(HEAD_PAN, MOVING_SPEED, 800);
+//        	dxl_write_word(HEAD_TILT, MOVING_SPEED, 800);
+//        	dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, BufferGoalServo2);
+//        	dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, BufferGoalServo1);
+//		    sleep(1);
+//	    }	
+//	    TransitionBall = 1;
+//	    TransitionGoal = 0;
 //************************************************************************************************
         IplImage* Gray  = cvCreateImage(tamanho, IPL_DEPTH_8U, 1);
         cvCvtColor(GoalFrame, Gray, CV_BGR2GRAY);
@@ -1096,12 +1102,16 @@ int HeadFollow(float posx, float posy, bool *head_move1, bool *head_move2)
      int pan = 0;
     int tilt = 0;
 	int LookDown = 180;
-	int LeftLimit = 206;
-	int RightLimit = 194;
+	int LeftLimit = pos_servo2 - 50;
+	int RightLimit = pos_servo2 + 50;
 // Posição inicial da cabeça {304, 594} //01 , 02, cabeça
 
     dxl_write_word(HEAD_TILT, MOVING_SPEED, 300);//300
     dxl_write_word(HEAD_PAN, MOVING_SPEED, 300);//300
+
+    bool nolimitleft = dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L) > LeftLimit;
+    bool nolimitright = dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L) < RightLimit;
+    bool nolimit_total = nolimitleft && nolimitright;
 
     //int key = kbhit();
     //if (key != 0)
@@ -1115,7 +1125,7 @@ int HeadFollow(float posx, float posy, bool *head_move1, bool *head_move2)
 
 //------ Realiza o movimento do Pan -----------------------------------------------------------
     //------ Segue a bola para a esquerda do video -----------------------------------------
-    if(posx<(RESOLUCAO_X/2)*(1-CENTERBALL) && *head_move2==false && posx > LeftLimit)
+    if(posx<(RESOLUCAO_X/2)*(1-CENTERBALL) && *head_move2==false && nolimitright)
     {
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L)+( ((RESOLUCAO_X/2)-posx) * AJUSTE));
 
@@ -1123,7 +1133,7 @@ int HeadFollow(float posx, float posy, bool *head_move1, bool *head_move2)
     }
 
     //------ Segue a bola para a direita do video -----------------------------------------
-    if(posx>(RESOLUCAO_X/2)*(CENTERBALL+1) && *head_move2==false && posx < RightLimit)
+    if(posx>(RESOLUCAO_X/2)*(CENTERBALL+1) && *head_move2==false && nolimitleft)
     {
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L)-( (posx-(RESOLUCAO_X/2)) * AJUSTE));
 
@@ -1132,7 +1142,7 @@ int HeadFollow(float posx, float posy, bool *head_move1, bool *head_move2)
     }
 
     // Para a cabeça se chegou na posição desejada ----------------------------------------
-    if(posx>=(RESOLUCAO_X/2)*(1-CENTERBALL) && posx<=(RESOLUCAO_X/2)*(CENTERBALL+1) && posx < RightLimit && posx > LeftLimit)
+    if(posx>=(RESOLUCAO_X/2)*(1-CENTERBALL) && posx<=(RESOLUCAO_X/2)*(CENTERBALL+1) && nolimit_total)
 	{
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L));
         pan = 1;
@@ -1342,61 +1352,61 @@ static unsigned int varredura=0;
     }
 
 int LookDown = 180;
-int LeftLimit = 206;
-int RightLimit = 194;
+int LeftLimit = 50;
+int RightLimit = 50;
 
     if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==8)
     {
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2+LeftLimit);
-        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        //dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
     if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==7)
     {
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2-RightLimit);
-        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        //dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 	
 
     if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==6)
     {
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2-RightLimit);
-        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        //dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
 
     if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==5)
     {
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2+LeftLimit);
-        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        //dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
 
     if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==4)
     {
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2+LeftLimit);
-        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        //dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
 
     if(dxl_read_byte( HEAD_PAN, P_MOVING )==0 && varredura==3)
     {
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2-RightLimit);
-        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        //dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
     if(dxl_read_byte( HEAD_TILT, P_MOVING )==0 && varredura==2)
     {
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2-RightLimit);
-        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        //dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
     }
 
     if(dxl_read_byte( HEAD_TILT, P_MOVING )==0 && varredura==1)
     {
         dxl_write_word(HEAD_PAN, MOVING_SPEED, 700);
-        dxl_write_word(HEAD_TILT, MOVING_SPEED, 700);
+        //dxl_write_word(HEAD_TILT, MOVING_SPEED, 700);
         dxl_write_word(HEAD_PAN, P_GOAL_POSITION_L, pos_servo2-RightLimit);
-        dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
+        //dxl_write_word(HEAD_TILT, P_GOAL_POSITION_L, pos_servo1-LookDown);
       
     }
 
