@@ -98,7 +98,7 @@ class TreatingRawData(object):
         return self.bkb.write_int('DECISION_ACTION_A', 0)
 
     def set_walk_forward(self):
-        print 'walk forward'
+        print 'walk forward',
         return self.bkb.write_int('DECISION_ACTION_A', 1)
         
     def set_angle_turn(self,vel):
@@ -159,8 +159,8 @@ class TreatingRawData(object):
     def set_jump_right(self):
         return self.bkb.write_int('DECISION_ACTION_A', 15)
         
-    def set_vision_ball(self):
-        return self.bkb.write_int('DECISION_ACTION_VISION', 0)
+    def set_vision_line(self):
+        return self.bkb.write_int('DECISION_ACTION_VISION', 1)
         
         
     def delta_position_pan(self):
@@ -183,20 +183,19 @@ class Ordinary(TreatingRawData):
         print
                 
     def decision(self):
-            self.set_vision_ball() #set vision to find ball
+            self.set_vision_line() #set vision to find ball
 
             self.set_walk_forward()
-
-            if self.delta_position_pan() >= 20 and self.delta_position_pan() <= -20:
-				self.set_angle_turn(vel*delta_position_pan()*0.1)
-				print "Turn"
+            if self.delta_position_pan() >= 4 or self.delta_position_pan() <= -4:
+				self.set_angle_turn(self.delta_position_pan()*0.15)
+				print "   Turn ", self.delta_position_pan()*0.15
 
 robot = Ordinary()
 
 while True:
     robot.decision()
 
-    time.sleep(0.5)
+    time.sleep(0.2)
 
 #            if self.get_search_ball_status() == 1: #1 - searching ball
 #                self.set_stand_still()
