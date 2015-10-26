@@ -421,6 +421,12 @@ int main(int argc, char **argv)
 				std::cout<<" | Andar para frente"<<std::endl;
 				turnball.updateConfig(Walking::GetInstance()); //volta para os parametros padrao do gait
 				move_gait(walk_foward, 0.0, 0.0, stop_gait);
+				turnball.updateConfig(Walking::GetInstance()); //volta para os parametros padrao do gait
+				if(float(DECISION_ACTION_B)<turn_angle)
+				    move_gait(walk_foward, 0.0, float(DECISION_ACTION_B), stop_gait);
+				else
+				    move_gait(walk_foward, 0.0, turn_angle, stop_gait);
+				usleep(500000);
 				usleep(500000);
 			}
 			if(DECISION_ACTION_A == 2)
