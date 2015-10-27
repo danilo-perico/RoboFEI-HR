@@ -75,6 +75,9 @@ class TreatingRawData(object):
     def get_referee_usage(self):
         return self.config.get('Decision', 'use_vision') # lê na section Decision a variavel use_vision
 
+    def get_proporcional(self):
+        return self.config.getfloat('Decision', 'proporcional') # lê na section Decision a variavel use_vision
+
     def get_motor_tilt(self):
         return self.bkb.read_int('VISION_MOTOR1_ANGLE')
         
@@ -192,8 +195,8 @@ class Ordinary(TreatingRawData):
                 self.set_turn_left()
             else:
                 self.set_walk_forward()
-                self.set_angle_turn(self.delta_position_pan()*0.10)
-                print "   Turn ", self.delta_position_pan()*0.10
+                self.set_angle_turn(self.delta_position_pan()*self.get_proporcional())
+                print "   Turn ", self.delta_position_pan()*self.get_proporcional()
 
 robot = Ordinary()
 
