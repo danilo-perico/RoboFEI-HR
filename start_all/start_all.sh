@@ -25,7 +25,7 @@ do
 
     if [ ! "$(pidof control)" ] 
     then
-       sleep(2)
+       sleep 2
        mate-terminal -x sh -c 'echo 123456 | sudo -S ./start_control.sh' &
     fi
 
