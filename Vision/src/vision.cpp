@@ -56,7 +56,7 @@ using namespace std;
 #define RESOLUCAO_X 320 //1280   1920 640
 #define RESOLUCAO_Y 240  //720   1080 480
 
-#define CENTERBALL 0.05 // Porcentagem de quanto centraliza a bola no quadro
+#define CENTERBALL 0.03 // Porcentagem de quanto centraliza a bola no quadro
 #define AJUSTE 0.285 // para resolução de 640x480
 //#define AJUSTE 0.285*0.49 // para resolução de 1280x720
 #define AJUSTEDIST 1 // para resolução de 640x480
@@ -370,7 +370,7 @@ int HeadFollow(float posx, float posy, bool *head_move1, bool *head_move2)
 	int RightLimit = pos_servo2 + 50;
 
     dxl_write_word(HEAD_TILT, MOVING_SPEED, 300);//300
-    dxl_write_word(HEAD_PAN, MOVING_SPEED, 300);//300
+    dxl_write_word(HEAD_PAN, MOVING_SPEED, 500);//300
 
     bool nolimitleft = dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L) > LeftLimit;
     bool nolimitright = dxl_read_word( HEAD_PAN, P_PRESENT_POSITION_L) < RightLimit;

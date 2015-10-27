@@ -203,7 +203,7 @@ robot = Ordinary()
 while True:
     robot.decision()
 
-    time.sleep(0.1)
+    time.sleep(0.02)
 
 
     

@@ -8,7 +8,7 @@ sudo echo "starting all processes"
 
 while true
 do
-#    if [ ! "$(pidof imu)" ] 
+#   if [ ! "$(pidof imu)" ] 
 #    then
 #       mate-terminal -x sh -c './start_imu.sh' &
 #   fi

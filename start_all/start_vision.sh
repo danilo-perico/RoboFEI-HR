@@ -5,4 +5,4 @@ echo "vision"
 
 cd ../
 
-vision --vg
+./build/Vision/vision --vg
